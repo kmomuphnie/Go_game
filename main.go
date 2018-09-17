@@ -3,15 +3,24 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"net/http"
 )
 
 func main(){
-	var boardsize int= 8
+
+
+	//http.HandleFunc("/Reversi",ReversiReciever)
+	//err := http.ListenAndServe(":8007", nil)
+	//if err != nil {
+	//	log.Fatal("ListenAndServer: ", err)
+	//}
+
+
+	boardsize := 8
 	var color string
-	var AIFirst, AIFinish bool = false, false
-	var playerFinish bool = false
-	var stop bool = false
-	//var boardIndex string = "abcdefgh"
+	AIFirst, AIFinish := false, false
+	playerFinish := false
+	stop := false
 
 
 	//fmt.Print("Enter the board dimension: \n")
@@ -69,6 +78,13 @@ func main(){
 	}
 
 }
+
+//---------------------------------------------------Http server-----------------------------------------------------------
+func ReversiReciever(w http.ResponseWriter,r *http.Request){
+
+}
+
+
 //---------------------------------------------------------------------------------
 //initialize the board
 func initialBoard (board[][8] string){
@@ -120,12 +136,18 @@ func withinBound(row int, col int) bool{
 //check whether move is valid in certain direction
 func checkDirection(board[][8] string, boardsize int, row int, col int,
 					color string, deltaRow int, deltaCol int) bool{
-	var i int = deltaRow
-	var j int = deltaCol
+	i := deltaRow
+	j := deltaCol
+
+	//check up the direction moving out of range
+	if !withinBound(row + i, col + j){
+		return false
+	}
+
 	if board[row][col] == "_" && board[row +i][col +j] == inverseColor(color){
 	   	for withinBound(row+i, col +j) {
 			if board[row][col] == inverseColor(color) &&
-			   board[row +deltaRow][col+deltaCol] == color	{
+			   board[row + deltaRow][col + deltaCol] == color	{
 				return true
 			}
 			if board[row +deltaRow][col +deltaCol] == "_" {
@@ -428,61 +450,3 @@ func playerMove(board[][8] string, boardsize int,color string) bool{//return pla
 
 
 
-
-
-
-
-
-
-//func test(board[][8] string){
-//	if board[3][3] == "B" {
-//		board[3][3] = "1"
-//	}
-//}
-
-
-
-
-
-
-
-//func main()  {
-//	test := "a b"
-//	fmt.Scanf("%s", &test)
-//
-//	fmt.Println(test)
-//	fmt.Println(string(test[0]))
-//
-//	fmt.Println(string(test[1]))
-//}
-
-
-
-//-------------------------------------------------------------------------------------
-////recursion slice pass by ref
-
-//package main
-//
-//import "fmt"
-//
-//func swap(a []string, n int){
-//	n = n -1
-//	if n == 1{
-//		a[0] = "asdasd"
-//		a[1] = "asdfaf"
-//		return
-//	}else{
-//		fmt.Println("layer ", n)
-//		swap(a, n)
-//	}
-//
-//}
-//
-//func main() {
-//
-//	a := []string{"1", "2"}
-//
-//	swap(a, 5)
-//	fmt.Println(a[0],"\n", a[1])
-//}
-//-------------------------------------------------------------------------------------
