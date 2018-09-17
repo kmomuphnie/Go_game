@@ -4,7 +4,23 @@ import (
 	"fmt"
 	"strconv"
 	"net/http"
+	"encoding/json"
 )
+
+type recievePack struct {
+	Move string
+}
+
+type returnPack struct {
+	Board [][]string
+	ValidMove []string
+}
+//global for boarder
+var board [8][8]string
+var boardsize int
+var color string
+var AIFirst, AIFinish, playerFinish, stop bool
+
 
 func main(){
 
@@ -15,37 +31,8 @@ func main(){
 	//	log.Fatal("ListenAndServer: ", err)
 	//}
 
-
-	boardsize := 8
-	var color string
-	AIFirst, AIFinish := false, false
-	playerFinish := false
-	stop := false
-
-
-	//fmt.Print("Enter the board dimension: \n")
-	//fmt.Scanf("%d", &n)
-	fmt.Printf("Computer plays (B_1/W_2) (B is the first to play) : \n")
-	fmt.Scanf("%s", &color)
-	if string(color[0]) == string('B') {//is B
-		AIFirst = true
-	}
-
-	//var board [8]string
-	//for i:=0; i<boardsize; i++{
-	//	board[i] = "________"//8x8 board
-	//}
-	var board [8][8]string
-	for i:=0; i<boardsize; i++{
-		for j := 0; j < boardsize; j++ {
-			board[i][j] = "_"//8x8 board
-		}
-
-	}
-
-	//board[0][3] = "B"
-	initialBoard(board[0:][0:])//by reference use slice
-	printBoard(board[0:][0:], boardsize)//by ref
+	//initialize the board and all parameters
+	GameInit()
 	//----------------game part-----------------------
 
 	for  !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) &&!stop {
@@ -80,8 +67,28 @@ func main(){
 }
 
 //---------------------------------------------------Http server-----------------------------------------------------------
-func ReversiReciever(w http.ResponseWriter,r *http.Request){
+func recieveData(w http.ResponseWriter,r *http.Request) recievePack {
+	//decode package string->byte->struct
+	strToByte := []byte(r.FormValue("first"))
 
+	//convert to struct
+	var pkg recievePack;
+	err :=json.Unmarshal(strToByte, &pkg);
+	if err != nil{
+		fmt.Println("ERROR", err);
+	}
+
+	return pkg;
+}
+
+
+
+func ReversiReciever(w http.ResponseWriter,r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	recievePkg := recieveData(w, r)
+
+	fmt.Println(recievePkg)
 }
 
 
@@ -115,6 +122,38 @@ func printBoard(board[][8] string, boardsize int){
 		fmt.Print(" ",string('a'+i), " ")
 	}
 	fmt.Println()
+}
+
+func GameInit(){
+	boardsize = 8
+	AIFirst, AIFinish = false, false
+	playerFinish = false
+	stop = false
+	color = "W"
+
+	//fmt.Print("Enter the board dimension: \n")
+	//fmt.Scanf("%d", &n)
+	//fmt.Printf("Computer plays (B_1/W_2) (B is the first to play) : \n")
+	//fmt.Scanf("%s", &color)
+	//if string(color[0]) == string('B') {//is B
+	//	AIFirst = true
+	//}
+
+	//var board [8]string
+	//for i:=0; i<boardsize; i++{
+	//	board[i] = "________"//8x8 board
+	//}
+
+	for i:=0; i<boardsize; i++{
+		for j := 0; j < boardsize; j++ {
+			board[i][j] = "_"//8x8 board
+		}
+
+	}
+
+	//board[0][3] = "B"
+	initialBoard(board[0:][0:])//by reference use slice
+	printBoard(board[0:][0:], boardsize)//by ref
 }
 
 //inverse the color on tile
