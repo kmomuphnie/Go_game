@@ -1,2 +1,5 @@
 # Go_game
-asdasdasd
+
+Reversi Game 
+
+able to connnect to the web server
