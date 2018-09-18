@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"strconv"
-	"net/http"
 	"encoding/json"
-	"log"
+	"fmt"
+	"net/http"
+	"strconv"
 )
 
 type recievePack struct {
@@ -27,42 +26,43 @@ func main() {
 	//initialize the board and all parameters
 	GameInit()
 
-	http.HandleFunc("/Reversi",ReversiReciever)
-	err := http.ListenAndServe(":8007", nil)
-	if err != nil {
-		log.Fatal("ListenAndServer: ", err)
-	}
+	//http.HandleFunc("/Reversi",ReversiReciever)
+	//err := http.ListenAndServe(":8007", nil)
+	//if err != nil {
+	//	log.Fatal("ListenAndServer: ", err)
+	//}
 
 	//----------------game part-----------------------
 
-	//for !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) && !stop {
-	//	if AIFirst {
-	//		if !stop {
-	//			AIFinish = computerMove(board[0:][0:], boardsize, color)
-	//		}
-	//		playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
-	//	} else {
-	//		playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
-	//		if !stop && !(boardIsFull(board[0:][0:], boardsize)) {
-	//			AIFinish = computerMove(board[0:][0:], boardsize, color)
-	//		}
-	//	}
-	//	if boardIsFull(board[0:][0:], boardsize) {
-	//		AIFinish = true
-	//		playerFinish = true
-	//	}
-	//}
-	//
-	////win conditions
-	//if stop {
-	//	fmt.Println(color, "player wins.")
-	//} else if getWinner(board[0:][0:], boardsize, color) > getWinner(board[0:][0:], boardsize, inverseColor(color)) {
-	//	fmt.Println(color, "player wins.")
-	//} else if getWinner(board[0:][0:], boardsize, color) < getWinner(board[0:][0:], boardsize, inverseColor(color)) {
-	//	fmt.Println(inverseColor(color), "player wins.")
-	//} else {
-	//	fmt.Println("Draw!")
-	//}
+	for !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) && !stop {
+		fmt.Println("test1")
+		if AIFirst {
+			if !stop {
+				AIFinish = computerMove(board[0:][0:], boardsize, color)
+			}
+			playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
+		} else {
+			playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
+			if !stop && !(boardIsFull(board[0:][0:], boardsize)) {
+				AIFinish = computerMove(board[0:][0:], boardsize, color)
+			}
+		}
+		if boardIsFull(board[0:][0:], boardsize) {
+			AIFinish = true
+			playerFinish = true
+		}
+	}
+
+	//win conditions
+	if stop {
+		fmt.Println(color, "player wins.")
+	} else if getWinner(board[0:][0:], boardsize, color) > getWinner(board[0:][0:], boardsize, inverseColor(color)) {
+		fmt.Println(color, "player wins.")
+	} else if getWinner(board[0:][0:], boardsize, color) < getWinner(board[0:][0:], boardsize, inverseColor(color)) {
+		fmt.Println(inverseColor(color), "player wins.")
+	} else {
+		fmt.Println("Draw!")
+	}
 
 }
 
@@ -82,23 +82,23 @@ func recieveData(w http.ResponseWriter, r *http.Request) recievePack {
 }
 
 func ReversiReciever(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//get pkg from web
-	recievePkg := recieveData(w, r)
-
-	var invalidMove bool
-	playerFinish, invalidMove = playerMove(board[0:][0:], boardsize, inverseColor(color), recievePkg.Move)
-	//if user play fire, dont do anything
-	if invalidMove == true{
-		return
-	}
-
-	computerMove(board[0:][0:], boardsize, color)
-
-	//return the board as whole
-	BoardReturn(w, r, board)
-
-	fmt.Println(recievePkg)
+	//w.Header().Set("Access-Control-Allow-Origin", "*")
+	////get pkg from web
+	//recievePkg := recieveData(w, r)
+	//
+	//var invalidMove bool
+	//playerFinish, invalidMove = playerMove(board[0:][0:], boardsize, inverseColor(color), recievePkg.Move)
+	////if user play fire, dont do anything
+	//if invalidMove == true{
+	//	return
+	//}
+	//
+	//computerMove(board[0:][0:], boardsize, color)
+	//
+	////return the board as whole
+	//BoardReturn(w, r, board)
+	//
+	//fmt.Println(recievePkg)
 }
 
 
@@ -122,10 +122,10 @@ func BoardReturn(w http.ResponseWriter,r *http.Request, input interface{}){
 //---------------------------------------------------------------------------------
 //initialize the board
 func initialBoard(board [][8] string) {
-	board[3][3] = "B"
-	board[4][3] = "W"
-	board[3][4] = "W"
-	board[4][4] = "B"
+	board[3][3] = "W"
+	board[4][3] = "B"
+	board[3][4] = "B"
+	board[4][4] = "W"
 }
 
 //print the board
@@ -158,13 +158,13 @@ func GameInit() {
 	stop = false
 	color = "W"
 
-	//fmt.Print("Enter the board dimension: \n")
+	fmt.Print("Enter the board dimension: \n")
 	//fmt.Scanf("%d", &n)
-	//fmt.Printf("Computer plays (B_1/W_2) (B is the first to play) : \n")
-	//fmt.Scanf("%s", &color)
-	//if string(color[0]) == string('B') {//is B
-	//	AIFirst = true
-	//}
+	fmt.Printf("Computer plays (B_1/W_2) (B is the first to play) : \n")
+	fmt.Scanf("%s", &color)
+	if string(color[0]) == string('B') {//is B
+		AIFirst = true
+	}
 
 	//var board [8]string
 	//for i:=0; i<boardsize; i++{
@@ -377,6 +377,9 @@ func getValidMoves(board [][8] string, boardsize int, color string) ([64][2]int,
 			}
 		}
 	}
+
+	fmt.Println("numValidMoves:", numValidMoves)
+
 	return moveList, numValidMoves
 	//var numValidMoves int = 0
 	//var i,j int = 0,0
@@ -395,30 +398,34 @@ func getValidMoves(board [][8] string, boardsize int, color string) ([64][2]int,
 }
 
 func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
-	alpha int, beta int, color string, isMaxing bool,
-	moveRowCol []int) int {
+	alpha int, beta int, color string, isMaxing bool, moveRowCol []int) int {
+
+	//fmt.Println(boardsize, depth, startDepth, alpha, beta, color, isMaxing, moveRowCol)
+
 	var row, col int
-	var i, numValidMoves int
-	var moveList [64][2] int
-	moveList, numValidMoves = getValidMoves(boardState[0:][0:], boardsize, color)
-	//moveList, numValidMovesOpp = getValidMoves(boardState[0:][0:], boardsize, color)
+
+	moveList, numValidMoves := getValidMoves(boardState[0:][0:], boardsize, color)
+
+
 
 	if depth == 0 && (startDepth%2 != 0) {
 		return getScore(boardState[0:][0:], boardsize, inverseColor(color), false) -
 			getScore(boardState[0:][0:], boardsize, color, false)
 	} else if isMaxing {
-		var maxScore int = -10000000
+		maxScore := -10000000
 		var preScore int
 
-		for i = 0; i < numValidMoves; i++ {
+		for i := 0; i < numValidMoves; i++ {
 			row = moveList[i][0]
 			col = moveList[i][1]
 			var newBoard [8][8]string
 			generateState(boardState[0:][0:], newBoard[0:][0:], boardsize, row, col, color)
 			preScore = maxScore
-			maxScore = max(maxScore,
-				miniMax(newBoard[0:][0:], boardsize, depth-1, startDepth, alpha, beta,
+
+			//here recursively find max for further move
+			maxScore = max(maxScore, miniMax(newBoard[0:][0:], boardsize, depth-1, startDepth, alpha, beta,
 					inverseColor(color), false, moveRowCol))
+
 			alpha = max(alpha, maxScore)
 			if depth == startDepth && maxScore != preScore {
 				moveRowCol[0] = row
@@ -431,7 +438,7 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 		return maxScore
 	} else {
 		var minScore int = 10000000
-		for i = 0; i < numValidMoves; i++ {
+		for i := 0; i < numValidMoves; i++ {
 			row = moveList[i][0]
 			col = moveList[i][1]
 			var newBoard [8][8]string
@@ -453,13 +460,18 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 func computerMove(board [][8] string, boardsize int, color string) bool {
 	var numValidMovesComp int
 	compMoveRowCol := []int{0, 0} //initialize the slice
-	var depth int = 5             //depth changes for minimax out of the time consumed
+	depth := 5             //depth changes for minimax out of the time consumed
 	var moveList [64][2] int
 	var a int
+
 	moveList, numValidMovesComp = getValidMoves(board[0:][0:], boardsize, color)
+	fmt.Println(numValidMovesComp)
+
 	if numValidMovesComp > 0 {
 		a = moveList[0][0]
-		miniMax(board[0:][0:], boardsize, depth, depth, -100000, 100000, color, true, compMoveRowCol)
+		miniMax(board[0:][0:], boardsize, depth, depth, -100000, 100000,
+				color, true, compMoveRowCol)
+
 		fmt.Println("Computer place", color, "at", compMoveRowCol[0], compMoveRowCol[1])
 		executeMove(board[0:][0:], boardsize, color, compMoveRowCol[0], compMoveRowCol[1])
 		printBoard(board[0:][0:], boardsize)
@@ -475,20 +487,20 @@ func computerMove(board [][8] string, boardsize int, color string) bool {
 }
 
 //let player make a move
-func playerMove(board [][8] string, boardsize int, color string, playerMoveindex string) (bool, bool) { //return playerfinish
+func playerMove(board [][8] string, boardsize int, color string/*, playerMoveindex string*/) (bool/*, bool*/) { //return playerfinish
 	numValidMovePlayer := 0
 	playerMoveRowCol := []int{0, 0}
 	var moveList [64][2] int
 	var a int
-	var invalidMove bool
+	//var invalidMove bool
 
-	fmt.Println("playerMoveindex:",playerMoveindex, color)
+	//fmt.Println("playerMoveindex:",playerMoveindex, color)
 	moveList, numValidMovePlayer = getValidMoves(board[0:][0:], boardsize, color)
 	if numValidMovePlayer > 0 {
 		a = moveList[0][0]
 
-		//invalidMove := true
-		//for invalidMove {
+		invalidMove := true
+		for invalidMove {
 
 			//checking invaild move
 			//if invalidMove{
@@ -496,9 +508,9 @@ func playerMove(board [][8] string, boardsize int, color string, playerMoveindex
 			//}
 
 
-			//fmt.Print("Enter move for color", color, "(RowCol): ")
-			inputStr := playerMoveindex //get the input"12" to 1 2
-			//fmt.Scanf("%s", &inputStr)
+			fmt.Print("Enter move for color", color, "(RowCol): ")
+			inputStr := "" //get the input"12" to 1 2 playerMoveindex
+			fmt.Scanf("%s", &inputStr)
 			var inputRowCol [2]int
 			inputRowCol[0], _ = strconv.Atoi(string(inputStr[0]))
 			inputRowCol[1], _ = strconv.Atoi(string(inputStr[1]))
@@ -513,14 +525,14 @@ func playerMove(board [][8] string, boardsize int, color string, playerMoveindex
 				printBoard(board[0:][0:], boardsize)
 				invalidMove = false
 			}
-		//}
+		}
 	} else {
 		fmt.Println(color, "player has no valid move.")
-		return true, true // playerfinish = true
+		return true/*, true */// playerfinish = true
 	}
 
 	if a == 0 {
 		fmt.Print("something wrong in playerMove")
 	}
-	return false, invalidMove
+	return false/*, invalidMove*/
 }
