@@ -34,24 +34,23 @@ func main() {
 
 	//----------------game part-----------------------
 
-	//for !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) && !stop {
-	//	fmt.Println("test1")
-	//	if AIFirst {
-	//		if !stop {
+	for !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) && !stop {
+		if AIFirst {
+			if !stop {
 				AIFinish = computerMove(board[0:][0:], boardsize, color)
-			//}
+			}
 			playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
-	//	} else {
-	//		playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
-	//		if !stop && !(boardIsFull(board[0:][0:], boardsize)) {
-	//			AIFinish = computerMove(board[0:][0:], boardsize, color)
-	//		}
-	//	}
-	//	if boardIsFull(board[0:][0:], boardsize) {
-	//		AIFinish = true
-	//		playerFinish = true
-	//	}
-	//}
+		} else {
+			playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
+			if !stop && !(boardIsFull(board[0:][0:], boardsize)) {
+				AIFinish = computerMove(board[0:][0:], boardsize, color)
+			}
+		}
+		if boardIsFull(board[0:][0:], boardsize) {
+			AIFinish = true
+			playerFinish = true
+		}
+	}
 
 	//win conditions
 	if stop {
@@ -259,16 +258,30 @@ func switchTiles(board [][8] string, boardsize int, color string, row int, col i
 
 //excecute move at point row,col
 func executeMove(board [][8] string, boardsize int, color string, row int, col int) {
+	//if row == 2 && col == 3{
+	//	fmt.Println("------IN ExecuteMove 1------")
+	//	printBoard(board, 8)
+	//}
+
 	var deltaRow, deltaCol int
 	for deltaRow = -1; deltaRow <= 1; deltaRow++ {
 		for deltaCol = -1; deltaCol <= 1; deltaCol ++ {
 			if !(deltaCol == 0 && deltaRow == 0) {
 				if checkDirection(board[0:][0:], boardsize, row, col, color, deltaRow, deltaCol) {
 					switchTiles(board[0:][0:], boardsize, color, row, col, deltaRow, deltaCol)
+					//if row == 2 && col == 3{
+					//	fmt.Println("------Flip!------")
+					//}
 				}
 			}
 		}
 	}
+
+	//if row == 2 && col == 3{
+	//	fmt.Println("------IN ExecuteMove 2------")
+	//	printBoard(board, 8)
+	//}
+
 	board[row][col] = color
 }
 
@@ -352,15 +365,26 @@ func min(a int, b int) int {
 
 //copy to a new board state
 func generateState(board [][8] string, newBoard [][8] string, boardsize int, row int, col int, color string) {
-	var i, j int
-	for i = 0; i < boardsize; i++ {
-		for j = 0; j < boardsize; j++ {
-			if !(i == row && j == col) {
+
+	for i := 0; i < boardsize; i++ {
+		for j := 0; j < boardsize; j++ {
+			//if !(i == row && j == col) {
 				newBoard[i][j] = board[i][j]
-			}
+			//}
 		}
 	}
+
+	//if row == 2 && col == 3{
+	//	fmt.Println("------before ExecuteMove------")
+	//	printBoard(newBoard, 8)
+	//}
+
 	executeMove(newBoard, boardsize, color, row, col)
+
+	//if row == 2 && col == 3{
+	//	fmt.Println("------after ExecuteMove------")
+	//	printBoard(newBoard, 8)
+	//}
 }
 
 //function to get a list of valid moves and return both the movelist and the total validmoves
@@ -404,7 +428,7 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 
 	moveList, numValidMoves := getValidMoves(boardState[0:][0:], boardsize, color)
 
-	fmt.Println(boardsize, depth, startDepth, alpha, beta, color, isMaxing, moveRowCol, numValidMoves)
+	//fmt.Println(boardsize, depth, startDepth, alpha, beta, color, isMaxing, moveRowCol, numValidMoves)
 
 	if depth == 0 && (startDepth%2 != 0) {
 		return getScore(boardState[0:][0:], boardsize, inverseColor(color), false) -
@@ -413,7 +437,7 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 		maxScore := -10000000
 		var preScore int
 
-		fmt.Println("------start max Looping------")
+		//fmt.Println("------start max Looping------")
 
 		for i := 0; i < numValidMoves; i++ {
 			row = moveList[i][0]
@@ -422,7 +446,7 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 			generateState(boardState[0:][0:], newBoard[0:][0:], boardsize, row, col, color)
 			preScore = maxScore
 
-			printBoard(newBoard[0:][0:], 8)
+			//printBoard(newBoard[0:][0:], 8)
 
 			//here recursively find max for further move
 			maxScore = max(maxScore, miniMax(newBoard[0:][0:], boardsize, depth-1, startDepth, alpha, beta,
@@ -438,18 +462,21 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 			}
 		}
 
-		fmt.Println("------end max Looping------")
+		//fmt.Println("------end max Looping------")
 		return maxScore
 	} else {
 		var minScore int = 10000000
 
-		fmt.Println("------start min Looping------")
+		//fmt.Println("------start min Looping------")
 
 		for i := 0; i < numValidMoves; i++ {
 			row = moveList[i][0]
 			col = moveList[i][1]
 			var newBoard [8][8]string
 			generateState(boardState[0:][0:], newBoard[0:][0:], boardsize, row, col, color)
+
+			//printBoard(newBoard[0:][0:], 8)
+
 			minScore = min(minScore,
 				miniMax(newBoard[0:][0:], boardsize, depth-1, startDepth, alpha, beta,
 					inverseColor(color), true, moveRowCol))
@@ -459,7 +486,7 @@ func miniMax(boardState [][8] string, boardsize int, depth int, startDepth int,
 			}
 		}
 
-		fmt.Println("------end min Looping------")
+		//fmt.Println("------end min Looping------")
 		return minScore
 	}
 
@@ -474,14 +501,13 @@ func computerMove(board [][8] string, boardsize int, color string) bool {
 	var a int
 
 	moveList, numValidMovesComp = getValidMoves(board[0:][0:], boardsize, color)
-	fmt.Println(numValidMovesComp)
 
 	if numValidMovesComp > 0 {
 		a = moveList[0][0]
-		fmt.Println("------start minMax------")
+		//fmt.Println("------start minMax------")
 		miniMax(board[0:][0:], boardsize, depth, depth, -100000, 100000,
 				color, true, compMoveRowCol)
-		fmt.Println("------finish minMax------")
+		//fmt.Println("------finish minMax------")
 
 		fmt.Println("Computer place", color, "at", compMoveRowCol[0], compMoveRowCol[1])
 		executeMove(board[0:][0:], boardsize, color, compMoveRowCol[0], compMoveRowCol[1])
