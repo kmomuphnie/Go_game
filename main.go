@@ -10,6 +10,7 @@ import (
 
 type recievePack struct {
 	Move string
+	Map [8][8]string
 }
 
 type returnPack struct {
@@ -115,6 +116,9 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	//get pkg from web
 	recievePkg := recieveData(w, r)
+
+	fmt.Println(recievePkg)
+	board = recievePkg.Map
 
 	var invalidMove bool
 	playerFinish, invalidMove = playerMove(board[0:][0:], boardsize, inverseColor(color), recievePkg.Move)
