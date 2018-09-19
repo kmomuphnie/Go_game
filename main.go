@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"log"
 )
 
 type recievePack struct {
@@ -13,6 +14,9 @@ type recievePack struct {
 
 type returnPack struct {
 	Board     interface{}
+	UserPoint int
+	AIPoint int
+	Winner string
 }
 
 //global for boarder
@@ -21,47 +25,52 @@ var boardsize int
 var color string
 var AIFirst, AIFinish, playerFinish, stop bool
 
+
 func main() {
 
 	//initialize the board and all parameters
 	GameInit()
 
-	//http.HandleFunc("/Reversi",ReversiReciever)
-	//err := http.ListenAndServe(":8007", nil)
-	//if err != nil {
-	//	log.Fatal("ListenAndServer: ", err)
-	//}
+
+
+	http.HandleFunc("/Reversi",ReversiReciever)
+	http.HandleFunc("/ReversiInit",ReversiInit)
+
+	err := http.ListenAndServe(":8007", nil)
+	if err != nil {
+		log.Fatal("ListenAndServer: ", err)
+	}
 
 	//----------------game part-----------------------
 
-	for !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) && !stop {
-		if AIFirst {
-			if !stop {
-				AIFinish = computerMove(board[0:][0:], boardsize, color)
-			}
-			playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
-		} else {
-			playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
-			if !stop && !(boardIsFull(board[0:][0:], boardsize)) {
-				AIFinish = computerMove(board[0:][0:], boardsize, color)
-			}
-		}
-		if boardIsFull(board[0:][0:], boardsize) {
-			AIFinish = true
-			playerFinish = true
-		}
-	}
-
-	//win conditions
-	if stop {
-		fmt.Println(color, "player wins.")
-	} else if getWinner(board[0:][0:], boardsize, color) > getWinner(board[0:][0:], boardsize, inverseColor(color)) {
-		fmt.Println(color, "player wins.")
-	} else if getWinner(board[0:][0:], boardsize, color) < getWinner(board[0:][0:], boardsize, inverseColor(color)) {
-		fmt.Println(inverseColor(color), "player wins.")
-	} else {
-		fmt.Println("Draw!")
-	}
+	//for !(boardIsFull(board[0:][0:], boardsize)) && !(AIFinish && playerFinish) && !stop {
+	//	if AIFirst {
+	//		if !stop {
+	//			AIFinish = computerMove(board[0:][0:], boardsize, color)
+	//		}
+	//		playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
+	//	} else {
+	//		playerFinish = playerMove(board[0:][0:], boardsize, inverseColor(color))
+	//		if !stop && !(boardIsFull(board[0:][0:], boardsize)) {
+	//			AIFinish = computerMove(board[0:][0:], boardsize, color)
+	//		}
+	//	}
+	//	if boardIsFull(board[0:][0:], boardsize) {
+	//		AIFinish = true
+	//		playerFinish = true
+	//	}
+	//}
+	//
+	////win conditions
+	//if stop {
+	//	fmt.Println(color, "player wins.")
+	//} else if getWinner(board[0:][0:], boardsize, color) > getWinner(board[0:][0:], boardsize, inverseColor(color)) {
+	//	fmt.Println(color, "player wins.")
+	//} else if getWinner(board[0:][0:], boardsize, color) < getWinner(board[0:][0:], boardsize, inverseColor(color)) {
+	//	fmt.Println(inverseColor(color), "player wins.")
+	//} else {
+	//	fmt.Println("Draw!")
+	//}
 
 }
 
@@ -80,32 +89,14 @@ func recieveData(w http.ResponseWriter, r *http.Request) recievePack {
 	return pkg;
 }
 
-func ReversiReciever(w http.ResponseWriter, r *http.Request) {
-	//w.Header().Set("Access-Control-Allow-Origin", "*")
-	////get pkg from web
-	//recievePkg := recieveData(w, r)
-	//
-	//var invalidMove bool
-	//playerFinish, invalidMove = playerMove(board[0:][0:], boardsize, inverseColor(color), recievePkg.Move)
-	////if user play fire, dont do anything
-	//if invalidMove == true{
-	//	return
-	//}
-	//
-	//computerMove(board[0:][0:], boardsize, color)
-	//
-	////return the board as whole
-	//BoardReturn(w, r, board)
-	//
-	//fmt.Println(recievePkg)
-}
-
-
-func BoardReturn(w http.ResponseWriter,r *http.Request, input interface{}){
+func BoardReturn(w http.ResponseWriter,r *http.Request, input interface{}, winner string){
 	fmt.Println("------Start Print Response------")
 
 	//encode to byte[]
-	stringInfoInByte, err := json.Marshal(returnPack{input})
+
+	userPoint := getPlayerPoint(board[0:][0:], 8, "B")
+	AIPoint := getPlayerPoint(board[0:][0:], 8, "W")
+	stringInfoInByte, err := json.Marshal(returnPack{input, userPoint, AIPoint, winner})
 	//convert byte[] to string
 	strConverted := string(stringInfoInByte)
 
@@ -116,6 +107,61 @@ func BoardReturn(w http.ResponseWriter,r *http.Request, input interface{}){
 	}
 	fmt.Println(stringInfoInByte)
 	fmt.Println(strConverted)
+}
+
+//-----------------------------------------------------Router-----------------------------------------------------------
+
+func ReversiReciever(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//get pkg from web
+	recievePkg := recieveData(w, r)
+
+	var invalidMove bool
+	playerFinish, invalidMove = playerMove(board[0:][0:], boardsize, inverseColor(color), recievePkg.Move)
+	//if user play fire, dont do anything
+	if invalidMove == true{
+		return
+	}
+
+	AIFinish := computerMove(board[0:][0:], boardsize, color)
+	full := boardIsFull(board[:][:], 8)
+	fmt.Println(playerFinish, AIFinish, full)
+
+	//check if game is finished
+	if (playerFinish && AIFinish) || full{
+		fmt.Println("Check Winner")
+		//then check winner
+		AIPoint := getPlayerPoint(board[0:][0:], boardsize, "W")
+		playerPoint := getPlayerPoint(board[0:][0:], boardsize, "B")
+
+		var winner string
+		if AIPoint > playerPoint {
+			winner = "AI"
+		} else if AIPoint < playerPoint {
+			winner = "Player"
+		} else {
+			winner = "Draw"
+		}
+
+		BoardReturn(w, r, board, winner)
+
+	}else{
+		//return the board as whole
+		BoardReturn(w, r, board, "")
+	}
+
+	fmt.Println(recievePkg)
+}
+
+//send initial play board to web make sure sync for everthing
+func ReversiInit(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	//initialize the board and all parameters
+	GameInit()
+
+	//return the board as whole
+	BoardReturn(w, r, board, "")
 }
 
 //---------------------------------------------------------------------------------
@@ -159,11 +205,11 @@ func GameInit() {
 
 	fmt.Print("Enter the board dimension: \n")
 	//fmt.Scanf("%d", &n)
-	fmt.Printf("Computer plays (B_1/W_2) (B is the first to play) : \n")
-	fmt.Scanf("%s", &color)
-	if string(color[0]) == string('B') {//is B
-		AIFirst = true
-	}
+	//fmt.Printf("Computer plays (B_1/W_2) (B is the first to play) : \n")
+	//fmt.Scanf("%s", &color)
+	//if string(color[0]) == string('B') {//is B
+	//	AIFirst = true
+	//}
 
 	//var board [8]string
 	//for i:=0; i<boardsize; i++{
@@ -176,6 +222,9 @@ func GameInit() {
 		}
 
 	}
+
+	//board[0][0] = "_"
+	//board[0][2] = "B"
 
 	//board[0][3] = "B"
 	initialBoard(board[0:][0:])          //by reference use slice
@@ -334,7 +383,7 @@ func getScore(board [][8] string, boardsize int, color string, gameOver bool) in
 }
 
 //counts real score value of tiles on  the board
-func getWinner(board [][8] string, boardsize int, color string) int {
+func getPlayerPoint(board [][8] string, boardsize int, color string) int {
 	var i, j int
 	var score int = 0
 	for i = 0; i < boardsize; i++ {
@@ -524,20 +573,20 @@ func computerMove(board [][8] string, boardsize int, color string) bool {
 }
 
 //let player make a move
-func playerMove(board [][8] string, boardsize int, color string/*, playerMoveindex string*/) (bool/*, bool*/) { //return playerfinish
+func playerMove(board [][8] string, boardsize int, color string, playerMoveindex string) (bool, bool) { //return playerfinish
 	numValidMovePlayer := 0
 	playerMoveRowCol := []int{0, 0}
 	var moveList [64][2] int
 	var a int
-	//var invalidMove bool
+	var invalidMove bool
 
 	//fmt.Println("playerMoveindex:",playerMoveindex, color)
 	moveList, numValidMovePlayer = getValidMoves(board[0:][0:], boardsize, color)
 	if numValidMovePlayer > 0 {
 		a = moveList[0][0]
 
-		invalidMove := true
-		for invalidMove {
+		//invalidMove := true
+		//for invalidMove {
 
 			//checking invaild move
 			//if invalidMove{
@@ -545,9 +594,9 @@ func playerMove(board [][8] string, boardsize int, color string/*, playerMoveind
 			//}
 
 
-			fmt.Print("Enter move for color", color, "(RowCol): ")
-			inputStr := "" //get the input"12" to 1 2 playerMoveindex
-			fmt.Scanf("%s", &inputStr)
+			//fmt.Print("Enter move for color", color, "(RowCol): ")
+			inputStr := playerMoveindex //get the input"12" to 1 2 playerMoveindex
+			//fmt.Scanf("%s", &inputStr)
 			var inputRowCol [2]int
 			inputRowCol[0], _ = strconv.Atoi(string(inputStr[0]))
 			inputRowCol[1], _ = strconv.Atoi(string(inputStr[1]))
@@ -562,14 +611,14 @@ func playerMove(board [][8] string, boardsize int, color string/*, playerMoveind
 				printBoard(board[0:][0:], boardsize)
 				invalidMove = false
 			}
-		}
+		//}
 	} else {
 		fmt.Println(color, "player has no valid move.")
-		return true/*, true */// playerfinish = true
+		return true, true // playerfinish = true
 	}
 
 	if a == 0 {
 		fmt.Print("something wrong in playerMove")
 	}
-	return false/*, invalidMove*/
+	return false, invalidMove
 }
