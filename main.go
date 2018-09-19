@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"log"
+	"time"
 )
 
 type recievePack struct {
@@ -127,32 +128,45 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	AIFinish := computerMove(board[0:][0:], boardsize, color)
-	full := boardIsFull(board[:][:], 8)
-	fmt.Println(playerFinish, AIFinish, full)
+	userValidMove := 0
+	for ;userValidMove == 0; {
+		//AI Move
+		AIFinish := computerMove(board[0:][0:], boardsize, color)
 
-	//check if game is finished
-	if (playerFinish && AIFinish) || full{
-		fmt.Println("Check Winner")
-		//then check winner
-		AIPoint := getPlayerPoint(board[0:][0:], boardsize, "W")
-		playerPoint := getPlayerPoint(board[0:][0:], boardsize, "B")
+		//check user validmove when user dont have move AI continue play
+		_, userValidMove = getValidMoves(board[0:][0:], 8, "B")
+		fmt.Println("User has no valid move")
 
-		var winner string
-		if AIPoint > playerPoint {
-			winner = "AI"
-		} else if AIPoint < playerPoint {
-			winner = "Player"
-		} else {
-			winner = "Draw"
+		//check the board is full then finish the game
+		full := boardIsFull(board[:][:], 8)
+		fmt.Println(playerFinish, AIFinish, full, userValidMove)
+
+		//check if game is finished
+		if (playerFinish && AIFinish) || full {
+			fmt.Println("Check Winner")
+			//then check winner
+			AIPoint := getPlayerPoint(board[0:][0:], boardsize, "W")
+			playerPoint := getPlayerPoint(board[0:][0:], boardsize, "B")
+
+			var winner string
+			if AIPoint > playerPoint {
+				winner = "AI"
+			} else if AIPoint < playerPoint {
+				winner = "Player"
+			} else {
+				winner = "Draw"
+			}
+
+			BoardReturn(w, r, board, winner)
+
 		}
 
-		BoardReturn(w, r, board, winner)
-
-	}else{
-		//return the board as whole
-		BoardReturn(w, r, board, "")
 	}
+
+	//delay 0.5 s to send back
+	time.Sleep(time.Second * 2)
+	//return the board as whole
+	BoardReturn(w, r, board, "")
 
 	fmt.Println(recievePkg)
 }
