@@ -164,7 +164,7 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//delay 0.5 s to send back
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Millisecond * 500)
 	//return the board as whole
 	BoardReturn(w, r, board, "")
 
