@@ -157,7 +157,7 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 			}
 
 			BoardReturn(w, r, board, winner)
-
+			return
 		}
 
 	}
