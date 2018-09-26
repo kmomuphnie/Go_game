@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"log"
+	"time"
 )
 
 type recievePack struct {
@@ -33,7 +34,7 @@ func main() {
 	GameInit()
 
 
-
+	http.HandleFunc("/Loading",Loading)
 	http.HandleFunc("/Reversi",ReversiReciever)
 	http.HandleFunc("/ReversiInit",ReversiInit)
 
@@ -74,6 +75,13 @@ func main() {
 	//}
 
 }
+
+func Loading(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	time.Sleep(time.Millisecond * 10000)
+	BoardReturn(w, r, nil, "")
+}
+
 
 //---------------------------------------------------Http server-----------------------------------------------------------
 func recieveData(w http.ResponseWriter, r *http.Request) recievePack {
@@ -140,12 +148,13 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 		full := boardIsFull(board[:][:], 8)
 		fmt.Println(playerFinish, AIFinish, full, userValidMove)
 
+		AIPoint := getPlayerPoint(board[0:][0:], boardsize, "W")
+		playerPoint := getPlayerPoint(board[0:][0:], boardsize, "B")
+
 		//check if game is finished
-		if (playerFinish && AIFinish) || full {
+		if (playerFinish && AIFinish) || full || AIPoint == 0 || playerPoint == 0 {
 			fmt.Println("Check Winner")
 			//then check winner
-			AIPoint := getPlayerPoint(board[0:][0:], boardsize, "W")
-			playerPoint := getPlayerPoint(board[0:][0:], boardsize, "B")
 
 			var winner string
 			if AIPoint > playerPoint {
