@@ -142,6 +142,7 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 
 		//check user validmove when user dont have move AI continue play
 		_, userValidMove = getValidMoves(board[0:][0:], 8, "B")
+		_, computerValidMove := getValidMoves(board[0:][0:], 8, "W")
 		fmt.Println("User has no valid move")
 
 		//check the board is full then finish the game
@@ -152,7 +153,8 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 		playerPoint := getPlayerPoint(board[0:][0:], boardsize, "B")
 
 		//check if game is finished
-		if (playerFinish && AIFinish) || full || AIPoint == 0 || playerPoint == 0 {
+		if (userValidMove == 0 && computerValidMove == 0) || full ||
+			AIPoint == 0 || playerPoint == 0 {
 			fmt.Println("Check Winner")
 			//then check winner
 
@@ -172,7 +174,7 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//delay 0.5 s to send back
-	//time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Millisecond * 500)
 	//return the board as whole
 	BoardReturn(w, r, board, "")
 
