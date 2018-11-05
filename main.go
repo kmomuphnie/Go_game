@@ -132,6 +132,7 @@ func ReversiReciever(w http.ResponseWriter, r *http.Request) {
 	playerFinish, invalidMove = playerMove(board[0:][0:], boardsize, inverseColor(color), recievePkg.Move)
 	//if user play fire, dont do anything
 	if invalidMove == true{
+		BoardReturn(w, r, board, "")
 		return
 	}
 
